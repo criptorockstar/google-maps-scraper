@@ -68,8 +68,7 @@ class MapsScraper(WebScraping):
         # Add css class to each result
         
         
-        
-    def next_page(self):
+    def next_page(self) -> bool:
         """ Go to the next page of results
 
         Returns:
