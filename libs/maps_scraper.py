@@ -74,73 +74,86 @@ class MapsScraper(WebScraping):
         # Remove separator elements
         self.remove_elems(selectors["separator"])
 
+        # print results
+        def print_results():
+            datos = self.extracted_data
+
+            for clave, valor in datos.items():
+                print("Nombre:", valor['name'])
+                print("Sitio web:", valor['website'])
+                print("Teléfono:", valor['phone'])
+                print()
+
         # Loop results
-        for index in range(0, len(self.get_elems(selectors["main"]))):
-            results = self.get_elems(selectors["main"])
-            result = results[index]
+        def loop_results():
+            extracted_data_list = []
+            for index in range(0, len(self.get_elems(selectors["main"]))):
+                self.refresh_selenium()
+                time.sleep(3)
+                results = self.get_elems(selectors["main"])
+                result = results[index]
+                
+                extracted_data = extract_data(selectors, result)
+
+                extracted_data_list.append(extracted_data)
             
-            extracted_data = self.extract_data(selectors, result)
-
-            unique_id = extracted_data["name"]
-
-            self.extracted_data[unique_id] = extracted_data
-
-        datos = self.extracted_data
-
-        for clave, valor in datos.items():
-            print("Nombre:", valor['name'])
-            print("Sitio web:", valor['website'])
-            print("Teléfono:", valor['phone'])
-            print()
+            return extracted_data_list
 
         # Extract data from each result
-    def extract_data(self, selectors, result):
-        link_item = result.find_element(By.CSS_SELECTOR, selectors["store.link"]).get_attribute('href')
-        title_item = result.find_element(By.CSS_SELECTOR, selectors["store.name"]).text
+        def extract_data(selectors, result):
+            link_item = result.find_element(By.CSS_SELECTOR, selectors["store.link"]).get_attribute('href')
+            title_item = result.find_element(By.CSS_SELECTOR, selectors["store.name"]).text
 
-        self.set_page(link_item)
-        self.refresh_selenium()
+            self.set_page(link_item)
+            self.refresh_selenium()
 
-        website_item = None
-        try:
-            self.wait_load('a.CsEnBe')
-            links, website_item = self.get_elems('a.CsEnBe'), None
+            website_item = extract_website()
+            phone_item = extract_phone()
+            
+            # Add class to avoid store duplicated results
+                    
+            # Go Back
+            self.get_browser().back()
+
+            return {
+                "name": title_item,
+                "website": website_item,
+                "phone": phone_item
+            }
+        
+        def extract_website():
+            links = self.get_elems('a.CsEnBe')
             for link in links:
                 if "https://api.whatsapp.com" in link.get_attribute('href'):
                     pass
 
                 website = link.get_attribute('href')
-                if "https://business.google.com/" in website:
-                    website_item = None
-                else:
-                    website_item = website
-        except:
-            pass
+                if not "https://business.google.com/" in website and not "https://api.whatsapp.com" in website:
+                    return website
+            
+            return None
+        
 
-        phone_item = None
-        try:
+        def extract_phone():
             objs = self.get_elems('button.CsEnBe')
             for obj in objs:
                 phone = obj.find_element(By.CSS_SELECTOR, 'img.Liguzb')
                 
                 if "phone_gm_blue_24dp.png" in phone.get_attribute('src'):
-                    phone_item = obj.text
-        except:
-            pass
-                
-        # Add class to avoid store duplicated results
-        #self.add_class(result)
-                
-        # Go Back
-        self.get_browser().back()
-        self.refresh_selenium()
+                    return obj.text
+            
+            return None
+        
+        # loop results
+        extracted_data_list = loop_results()
+        
+        # Store in memory
+        for extracted_data in extracted_data_list:
+            unique_id = extracted_data["name"]
+            self.extracted_data[unique_id] = extracted_data
 
-        return {
-            "name": title_item,
-            "website": website_item,
-            "phone": phone_item
-        }
-
+        # print results
+        print_results()
 
         # Add css class to each result
     def add_class(self, elem):
