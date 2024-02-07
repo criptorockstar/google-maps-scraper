@@ -1,5 +1,7 @@
 from libs.web_scraping import WebScraping
 from selenium.webdriver.common.by import By
+import time
+
 
 class MapsScraper(WebScraping):
 
@@ -91,31 +93,41 @@ class MapsScraper(WebScraping):
         title_item = result.find_element(By.CSS_SELECTOR, selectors["store.name"]).text
 
         self.set_page(link_item)
+        self.refresh_selenium()
 
-        links, website_item = self.get_elems('a.CsEnBe'), None
-        for link in links:
-            if "https://api.whatsapp.com" in link.get_attribute('href'):
-                pass
+        website_item = None
+        try:
+            self.wait_load('a.CsEnBe')
+            links, website_item = self.get_elems('a.CsEnBe'), None
+            for link in links:
+                if "https://api.whatsapp.com" in link.get_attribute('href'):
+                    pass
 
-            website = link.get_attribute('href')
-            if "https://business.google.com/" in website:
-                website_item = None
-            else:
-                website_item = website
+                website = link.get_attribute('href')
+                if "https://business.google.com/" in website:
+                    website_item = None
+                else:
+                    website_item = website
+        except:
+            pass
 
-        objs = self.get_elems('button.CsEnBe')
         phone_item = None
-        for obj in objs:
-            phone = obj.find_element(By.CSS_SELECTOR, 'img.Liguzb')
-            
-            if "phone_gm_blue_24dp.png" in phone.get_attribute('src'):
-                phone_item = obj.text
+        try:
+            objs = self.get_elems('button.CsEnBe')
+            for obj in objs:
+                phone = obj.find_element(By.CSS_SELECTOR, 'img.Liguzb')
+                
+                if "phone_gm_blue_24dp.png" in phone.get_attribute('src'):
+                    phone_item = obj.text
+        except:
+            pass
                 
         # Add class to avoid store duplicated results
         #self.add_class(result)
                 
         # Go Back
         self.get_browser().back()
+        self.refresh_selenium()
 
         return {
             "name": title_item,
