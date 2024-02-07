@@ -74,101 +74,86 @@ class MapsScraper(WebScraping):
         # Remove separator elements
         self.remove_elems(selectors["separator"])
 
-        # print results
-        def print_results():
-            datos = self.extracted_data
-
-            for clave, valor in datos.items():
-                print("Nombre:", valor['name'])
-                print("Sitio web:", valor['website'])
-                print("Teléfono:", valor['phone'])
-                print()
-
         # Loop results
         def loop_results():
-            extracted_data_list = []
-            elems = self.get_elems(selectors["main"])
+            targets = []
+            extracted_data = []
+
+            # Retrieve feed data
+            results = self.get_elems(selectors["main"])
             
-            for index in range(0, len(elems)):
-
-                self.refresh_selenium()
-                time.sleep(3)
-
-                results = self.get_elems(selectors["main"])
-                result = results[index]
-
-                self.get_browser().execute_script(
-                    "arguments[0].classList.add('stored');", result)
+            # Loop results
+            for result in results:
+                # Query bussines's names and links
+                title_item = result.find_element(By.CSS_SELECTOR, selectors["store.name"]).text
+                link_item = result.find_element(By.CSS_SELECTOR, selectors["store.link"]).get_attribute('href')
                 
-                print(result.get_attribute('class'))
+                # Append queried results on temporal list as targets to scrap
+                targets.append([title_item, link_item])
 
-                extracted_data = extract_data(selectors, result)
+            # Loop targets
+            for target in targets:
+                # Navigate to target detail's page
+                self.set_page(target[1])
 
-                extracted_data_list.append(extracted_data)
+                # Wait a resonable amount of seconds to load details's page
+                time.sleep(20)
+
+                # Extract target's webpage
+                website_item = extract_website()
+
+                # Extract target's phone
+                phone_item = extract_phone()
+
+                # Append complete target's data
+                extracted_data.append([
+                    target[0],
+                    target[1],
+                    website_item,
+                    phone_item
+                ])
             
-            return extracted_data_list
+            return extracted_data
 
-        # Extract data from each result
-        def extract_data(selectors, result):
-            link_item = result.find_element(By.CSS_SELECTOR, selectors["store.link"]).get_attribute('href')
-            title_item = result.find_element(By.CSS_SELECTOR, selectors["store.name"]).text
-
-            self.set_page(link_item)
-            self.refresh_selenium()
-
-            website_item = extract_website()
-            phone_item = extract_phone()
-            
-            # Add class to avoid store duplicated results
-                    
-            # Go Back
-            self.get_browser().back()
-
-            return {
-                "name": title_item,
-                "website": website_item,
-                "phone": phone_item
-            }
-        
         def extract_website():
-            time.sleep(10)
+            # Get link elements
             links = self.get_elems('a.CsEnBe')
-            for link in links:
-                if "https://api.whatsapp.com" in link.get_attribute('href'):
-                    pass
 
-                website = link.get_attribute('href')
-                if not "https://business.google.com/" in website and not "https://api.whatsapp.com" in website:
-                    return website
+            # Loop on links
+            for link in links:
+                # Filter whatsapp links
+                if "https://api.whatsapp.com" in link.get_attribute('href'):
+                    continue
+
+                # Filter Google bussiness links, any other links are valid
+                if not "https://business.google.com/" in link.get_attribute('href'):
+                    return link.get_attribute('href')
             
             return None
         
-
         def extract_phone():
-            time.sleep(10)
+            # Get tab button objects
             objs = self.get_elems('button.CsEnBe')
+
+            # Loop objects
             for obj in objs:
-                phone = obj.find_element(By.CSS_SELECTOR, 'img.Liguzb')
+                # Request tab's icons
+                obj_icon = obj.find_element(By.CSS_SELECTOR, 'img.Liguzb')
                 
-                if "phone_gm_blue_24dp.png" in phone.get_attribute('src'):
+                # If object has a phone icon return object's text data
+                if "phone_gm_blue_24dp.png" in obj_icon.get_attribute('src'):
                     return obj.text
             
             return None
         
-        # loop results
-        extracted_data_list = loop_results()
+        # Scroll down the page to load all items
+        self.scroll_page()
         
-        # Store in memory
-        for extracted_data in extracted_data_list:
-            unique_id = extracted_data["name"]
-            self.extracted_data[unique_id] = extracted_data
+        # Loop all items in a single loop
+        extracted_data = loop_results()
 
-        # next page
-        print("\ndeberia hacer scroll a la siguiente pagina")
-        self.next_page()
-        
-        # print results
-        print_results()
+        # Print all items for testing purposes
+        print(extracted_data)
 
     # Add css class to each result
     def add_class(self, elem):
@@ -176,11 +161,29 @@ class MapsScraper(WebScraping):
             "arguments[0].classList.add('stored');", elem)
 
 
-    def next_page(self) -> bool:
+    def scroll_page(self) -> bool:
         """ Go to the next page of results
         Returns:
             bool: True if there is a next page, False otherwise
         """
 
-        self.go_bottom('div.m6QErb.DxyBCb.kA9KIf.dS8AEf.ecceSd')
-        return True
+        # Get feed element
+        feed_element = self.get_elem('[role="feed"]')
+
+        # Scroll down the whole page to load all results in the D.O.M
+        while True:
+            # Get current position
+            current_position = self.get_browser().execute_script("return arguments[0].scrollTop;", feed_element)
+
+            # Scroll down
+            self.get_browser().execute_script("arguments[0].scrollTop += {};".format(1720), feed_element)
+            
+            # Give some time to load new items
+            time.sleep(5)
+            
+            # Get new scroll position
+            new_scroll_position = self.get_browser().execute_script("return arguments[0].scrollTop;", feed_element)
+
+            # If we can't scroll down any more we have reached the bottom
+            if new_scroll_position == current_position:
+                break

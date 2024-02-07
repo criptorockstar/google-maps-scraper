@@ -350,9 +350,11 @@ class WebScraping ():
         """
         Send click to specific element in the page
         """
-
-        elem = self.driver.find_element(By.CSS_SELECTOR, selector)
-        elem.click()
+        if type(selector) == 'str':
+            elem = self.driver.find_element(By.CSS_SELECTOR, selector)
+            elem.click()
+        else:
+            selector.click()
 
     def wait_load(self, selector, time_out=10, refresh_back_tab=-1):
         """

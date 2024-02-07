@@ -15,8 +15,4 @@ if __name__ == "__main__":
     maps_scraper.search()
 
     # Extract data
-    while True:
-        data = maps_scraper.extract_business()
-        more_pages = maps_scraper.next_page()
-        if not more_pages:
-            break
+    maps_scraper.extract_business()
