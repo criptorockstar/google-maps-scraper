@@ -92,7 +92,7 @@ class MapsScraper(WebScraping):
                 time.sleep(3)
                 results = self.get_elems(selectors["main"])
                 result = results[index]
-                
+
                 extracted_data = extract_data(selectors, result)
 
                 extracted_data_list.append(extracted_data)
@@ -122,6 +122,7 @@ class MapsScraper(WebScraping):
             }
         
         def extract_website():
+            time.sleep(10)
             links = self.get_elems('a.CsEnBe')
             for link in links:
                 if "https://api.whatsapp.com" in link.get_attribute('href'):
@@ -135,6 +136,7 @@ class MapsScraper(WebScraping):
         
 
         def extract_phone():
+            time.sleep(10)
             objs = self.get_elems('button.CsEnBe')
             for obj in objs:
                 phone = obj.find_element(By.CSS_SELECTOR, 'img.Liguzb')
@@ -155,10 +157,10 @@ class MapsScraper(WebScraping):
         # print results
         print_results()
 
-        # Add css class to each result
+    # Add css class to each result
     def add_class(self, elem):
         self.get_browser().execute_script(
-        f"arguments[0].setAttribute('class', 'stored');", elem)
+            "arguments[0].classList.add('stored');", elem)
 
 
     def next_page(self) -> bool:
