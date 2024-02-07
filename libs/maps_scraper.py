@@ -87,11 +87,20 @@ class MapsScraper(WebScraping):
         # Loop results
         def loop_results():
             extracted_data_list = []
-            for index in range(0, len(self.get_elems(selectors["main"]))):
+            elems = self.get_elems(selectors["main"])
+            
+            for index in range(0, len(elems)):
+
                 self.refresh_selenium()
                 time.sleep(3)
+
                 results = self.get_elems(selectors["main"])
                 result = results[index]
+
+                self.get_browser().execute_script(
+                    "arguments[0].classList.add('stored');", result)
+                
+                print(result.get_attribute('class'))
 
                 extracted_data = extract_data(selectors, result)
 
@@ -154,6 +163,10 @@ class MapsScraper(WebScraping):
             unique_id = extracted_data["name"]
             self.extracted_data[unique_id] = extracted_data
 
+        # next page
+        print("\ndeberia hacer scroll a la siguiente pagina")
+        self.next_page()
+        
         # print results
         print_results()
 
@@ -169,4 +182,5 @@ class MapsScraper(WebScraping):
             bool: True if there is a next page, False otherwise
         """
 
-        pass
+        self.go_bottom('div.m6QErb.DxyBCb.kA9KIf.dS8AEf.ecceSd')
+        return True
