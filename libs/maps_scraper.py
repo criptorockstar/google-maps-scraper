@@ -85,7 +85,13 @@ class MapsScraper(WebScraping):
 
             self.extracted_data[unique_id] = extracted_data
 
-        print(self.extracted_data)
+        datos = self.extracted_data
+
+        for clave, valor in datos.items():
+            print("Nombre:", valor['name'])
+            print("Sitio web:", valor['website'])
+            print("Teléfono:", valor['phone'])
+            print()
 
         # Extract data from each result
     def extract_data(self, selectors, result):
