@@ -1,5 +1,7 @@
 from libs.web_scraping import WebScraping
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import time
 
 
@@ -41,7 +43,7 @@ class MapsScraper(WebScraping):
         selectors = {
             "search": 'input[name="q"]',
         }
-        self.set_page("https://www.google.com/maps")
+        self.set_page("https://www.google.com/maps?hl=en") # Forced to english
         self.refresh_selenium()
         self.send_data(selectors["search"], self.search_text)
         self.send_data(selectors["search"], "\n")
@@ -81,6 +83,9 @@ class MapsScraper(WebScraping):
 
             # Retrieve feed data
             results = self.get_elems(selectors["main"])
+
+            print("Negocios encontrados:", len(results))
+            time.sleep(10)
             
             # Loop results
             for result in results:
@@ -92,12 +97,16 @@ class MapsScraper(WebScraping):
                 targets.append([title_item, link_item])
 
             # Loop targets
+            print("Recopilando datos..")
             for target in targets:
                 # Navigate to target detail's page
                 self.set_page(target[1])
 
                 # Wait a resonable amount of seconds to load details's page
-                time.sleep(20)
+                time.sleep(5)
+
+                # Check page's fully loaded
+                self.implicit_wait('div.iBPHvd.widget-scene') # ©Ubisoft©
 
                 # Extract target's webpage
                 website_item = extract_website()
@@ -112,9 +121,11 @@ class MapsScraper(WebScraping):
                     website_item,
                     phone_item
                 ])
+
+                print(extracted_data)
             
             return extracted_data
-
+        
         def extract_website():
             # Get link elements
             links = self.get_elems('a.CsEnBe')
@@ -147,6 +158,7 @@ class MapsScraper(WebScraping):
             return None
         
         # Scroll down the page to load all items
+        print("Cargando elementos.. Podria tardar unos minutos.")
         self.scroll_page()
         
         # Loop all items in a single loop
@@ -155,10 +167,15 @@ class MapsScraper(WebScraping):
         # Print all items for testing purposes
         print(extracted_data)
 
-    # Add css class to each result
-    def add_class(self, elem):
-        self.get_browser().execute_script(
-            "arguments[0].classList.add('stored');", elem)
+    
+    def implicit_wait(self, selector):
+        try:
+            WebDriverWait(self.get_browser(), 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, selector))
+            )
+        except:
+            self.get_browser().refresh()
+            time.sleep(3)
 
 
     def scroll_page(self) -> bool:
