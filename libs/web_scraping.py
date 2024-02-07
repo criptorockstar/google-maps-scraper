@@ -9,11 +9,12 @@ from selenium.webdriver.chrome.service import Service
 
 current_file = os.path.basename(__file__)
 
+
 class WebScraping ():
     """
     Class to manage and configure web browser
     """
-    
+
     service = None
     options = None
 
@@ -65,7 +66,7 @@ class WebScraping ():
         self.__width__ = width
         self.__height__ = height
         self.__mute__ = mute
-        
+
         self.__web_page__ = None
 
         # Kill chrome from terminal
@@ -149,7 +150,10 @@ class WebScraping ():
             WebScraping.options.add_argument("--disable-low-res-tiling")
             WebScraping.options.add_argument("--log-level=3")
             WebScraping.options.add_argument("--silent")
-            
+
+            ''' Hardcoded for testing purposes '''
+            WebScraping.options.add_experimental_option("detach", True)
+                       
             # Experimentals
             if self.__experimentals__:
                 WebScraping.options.add_experimental_option(

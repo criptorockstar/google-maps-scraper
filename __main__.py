@@ -6,9 +6,9 @@ load_dotenv()
 HEADLESS = os.getenv("SHOW_BROWSER") != "True"
 POSTAL_CODE = os.getenv("POSTAL_CODE")
 KEYWORDS = os.getenv("KEYWORDS").split(",")
-    
+
 if __name__ == "__main__":
-    
+
     maps_scraper = MapsScraper(POSTAL_CODE, KEYWORDS, HEADLESS)
 
     # Search postal code and keywords in google maps
