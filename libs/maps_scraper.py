@@ -35,7 +35,6 @@ class MapsScraper(WebScraping):
         # Store zip_code
         self.zipcode = postal_code
 
-
     def search(self):
         """ Search the url and wait for the results
         """
@@ -43,18 +42,27 @@ class MapsScraper(WebScraping):
         selectors = {
             "search": 'input[name="q"]',
         }
-        self.set_page("https://www.google.com/maps?hl=en") # Forced to english
+        self.set_page("https://www.google.com/maps?hl=en")
         self.refresh_selenium()
         self.send_data(selectors["search"], self.search_text)
         self.send_data(selectors["search"], "\n")
         self.refresh_selenium()
 
-    def extract_business(self):
+    def extract_business(self) -> dict:
         """ Extract business from the current results page
 
         Returns:
-            list: List of businesses data found
-                TODO: Define the data to return
+            dict: Dictionary with the extracted data
+            
+            Structure:
+            {
+                "business_name": {
+                    "link": str,
+                    "website": str,
+                    "phone": str
+                    "name": str
+                }
+            }
         """
 
         selectors = {
@@ -90,8 +98,14 @@ class MapsScraper(WebScraping):
             # Loop results
             for result in results:
                 # Query bussines's names and links
-                title_item = result.find_element(By.CSS_SELECTOR, selectors["store.name"]).text
-                link_item = result.find_element(By.CSS_SELECTOR, selectors["store.link"]).get_attribute('href')
+                title_item = result.find_element(
+                    By.CSS_SELECTOR,
+                    selectors["store.name"]
+                ).text
+                link_item = result.find_element(
+                    By.CSS_SELECTOR,
+                    selectors["store.link"]
+                ).get_attribute('href')
                 
                 # Append queried results on temporal list as targets to scrap
                 targets.append([title_item, link_item])
@@ -106,7 +120,7 @@ class MapsScraper(WebScraping):
                 time.sleep(5)
 
                 # Check page's fully loaded
-                self.implicit_wait('div.iBPHvd.widget-scene') # ©Ubisoft©
+                self.implicit_wait('div.iBPHvd.widget-scene')
 
                 # Extract target's webpage
                 website_item = extract_website()
@@ -122,7 +136,7 @@ class MapsScraper(WebScraping):
                     phone_item
                 ])
 
-                print(extracted_data)
+                print(f"extrayendo datos de {target[0]}...")
             
             return extracted_data
         
@@ -137,7 +151,7 @@ class MapsScraper(WebScraping):
                     continue
 
                 # Filter Google bussiness links, any other links are valid
-                if not "https://business.google.com/" in link.get_attribute('href'):
+                if "https://business.google.com/" not in link.get_attribute('href'):
                     return link.get_attribute('href')
             
             return None
@@ -165,18 +179,16 @@ class MapsScraper(WebScraping):
         extracted_data = loop_results()
 
         # Print all items for testing purposes
-        print(extracted_data)
+        return extracted_data
 
-    
     def implicit_wait(self, selector):
         try:
             WebDriverWait(self.get_browser(), 10).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, selector))
             )
-        except:
+        except Exception:
             self.get_browser().refresh()
             time.sleep(3)
-
 
     def scroll_page(self) -> bool:
         """ Go to the next page of results
@@ -186,20 +198,26 @@ class MapsScraper(WebScraping):
 
         # Get feed element
         feed_element = self.get_elem('[role="feed"]')
+        
+        self.go_bottom()
+        self.go_down()
 
         # Scroll down the whole page to load all results in the D.O.M
         while True:
             # Get current position
-            current_position = self.get_browser().execute_script("return arguments[0].scrollTop;", feed_element)
+            script = "return arguments[0].scrollTop;"
+            current_position = self.get_browser().execute_script(script, feed_element)
 
             # Scroll down
-            self.get_browser().execute_script("arguments[0].scrollTop += {};".format(1720), feed_element)
+            script = "arguments[0].scrollTop += 1720;"
+            self.get_browser().execute_script(script, feed_element)
             
             # Give some time to load new items
             time.sleep(5)
             
             # Get new scroll position
-            new_scroll_position = self.get_browser().execute_script("return arguments[0].scrollTop;", feed_element)
+            script = "return arguments[0].scrollTop;"
+            new_scroll_position = self.get_browser().execute_script(script, feed_element)
 
             # If we can't scroll down any more we have reached the bottom
             if new_scroll_position == current_position:
