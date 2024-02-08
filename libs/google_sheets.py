@@ -63,7 +63,7 @@ class SheetsManager ():
                     
                     self.write_cell (cell, row_index, column_index)
                     
-                sleep(2)
+                    sleep(2)
 
     def get_data (self): 
         """ Read all records of the sheet"""
