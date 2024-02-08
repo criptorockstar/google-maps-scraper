@@ -137,6 +137,11 @@ class MapsScraper(WebScraping):
                 ])
 
                 print(f"extrayendo datos de {target[0]}...")
+                
+                # Debug
+                target_index = targets.index(target)
+                if target_index > 5:
+                    break
             
             return extracted_data
         
@@ -154,7 +159,7 @@ class MapsScraper(WebScraping):
                 if "https://business.google.com/" not in link.get_attribute('href'):
                     return link.get_attribute('href')
             
-            return None
+            return ""
         
         def extract_phone():
             # Get tab button objects
@@ -169,7 +174,7 @@ class MapsScraper(WebScraping):
                 if "phone_gm_blue_24dp.png" in obj_icon.get_attribute('src'):
                     return obj.text
             
-            return None
+            return ""
         
         # Scroll down the page to load all items
         print("Cargando elementos.. Podria tardar unos minutos.")
@@ -218,6 +223,9 @@ class MapsScraper(WebScraping):
             # Get new scroll position
             script = "return arguments[0].scrollTop;"
             new_scroll_position = self.get_browser().execute_script(script, feed_element)
+            
+            # Debug
+            break
 
             # If we can't scroll down any more we have reached the bottom
             if new_scroll_position == current_position:
