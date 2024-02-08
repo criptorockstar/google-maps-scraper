@@ -114,10 +114,14 @@ class MapsScraper(WebScraping):
             print("Recopilando datos..")
             for target in targets:
                 # Navigate to target detail's page
-                self.set_page(target[1])
+                try:
+                    self.set_page(target[1])
+                except Exception:
+                    time.sleep(10)
+                    continue
 
                 # Wait a resonable amount of seconds to load details's page
-                time.sleep(5)
+                time.sleep(10)
 
                 # Check page's fully loaded
                 self.implicit_wait('div.iBPHvd.widget-scene')
@@ -137,11 +141,6 @@ class MapsScraper(WebScraping):
                 ])
 
                 print(f"extrayendo datos de {target[0]}...")
-                
-                # Debug
-                target_index = targets.index(target)
-                if target_index > 5:
-                    break
             
             return extracted_data
         
@@ -223,9 +222,6 @@ class MapsScraper(WebScraping):
             # Get new scroll position
             script = "return arguments[0].scrollTop;"
             new_scroll_position = self.get_browser().execute_script(script, feed_element)
-            
-            # Debug
-            break
 
             # If we can't scroll down any more we have reached the bottom
             if new_scroll_position == current_position:
