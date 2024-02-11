@@ -6,6 +6,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 current_file = os.path.basename(__file__)
 
@@ -20,10 +22,10 @@ class WebScraping ():
 
     def __init__(self, headless=False, time_out=0,
                  proxy_server="", proxy_port="", proxy_user="", proxy_pass="",
-                 chrome_folder="", user_agent=False, 
+                 chrome_folder="", user_agent=False,
                  download_folder="", extensions=[], incognito=False, experimentals=True,
-                 start_killing=False, start_openning:bool=True, width:int=1280, height:int=720,
-                 mute:bool=True):
+                 start_killing=False, start_openning: bool = True, width: int = 1280, height: int = 720,
+                 mute: bool = True):
         """ Constructor of the class
 
         Args:
@@ -74,13 +76,13 @@ class WebScraping ():
             print("\nTry to kill chrome...")
             windows = 'taskkill /IM "chrome.exe" /F > nul 2>&1'
             linux = "pkill -9 -f chrome > /dev/null 2>&1"
-            
+
             if os.name == "nt":
                 os.system(windows)
             else:
                 os.system(linux)
             print("Ok\n")
-            
+
         # Create and instance of the web browser
         if self.__start_openning__:
             self.__set_browser_instance__()
@@ -92,7 +94,7 @@ class WebScraping ():
         if time_out > 0:
             self.driver.set_page_load_timeout(time_out)
 
-    def set_cookies (self, cookies:list):
+    def set_cookies(self, cookies: list):
         """ Get list of cookies, formatted, from 'cookies.json' file
 
         Args:
@@ -113,7 +115,7 @@ class WebScraping ():
         for cookie in cookies_formatted:
             try:
                 self.driver.add_cookie(cookie)
-            except:
+            except Exception:
                 pass
 
     def __set_browser_instance__(self):
@@ -127,7 +129,7 @@ class WebScraping ():
 
         # Configure browser
         if not WebScraping.options:
-            
+
             WebScraping.options = webdriver.ChromeOptions()
             WebScraping.options.add_argument('--no-sandbox')
             WebScraping.options.add_argument('--start-maximized')
@@ -136,7 +138,7 @@ class WebScraping ():
             WebScraping.options.add_argument("--disable-notifications")
             WebScraping.options.add_argument("--disable-infobars")
             WebScraping.options.add_argument("--safebrowsing-disable-download-protection")
-            
+
             WebScraping.options.add_argument("--disable-dev-shm-usage")
             WebScraping.options.add_argument("--disable-renderer-backgrounding")
             WebScraping.options.add_argument("--disable-background-timer-throttling")
@@ -153,7 +155,7 @@ class WebScraping ():
 
             ''' Hardcoded for testing purposes '''
             WebScraping.options.add_experimental_option("detach", True)
-                       
+
             # Experimentals
             if self.__experimentals__:
                 WebScraping.options.add_experimental_option(
@@ -162,34 +164,37 @@ class WebScraping ():
 
             # screen size
             WebScraping.options.add_argument(f"--window-size={self.__width__},{self.__height__}")
-            
+
             # headless mode
             if self.__headless__:
                 WebScraping.options.add_argument("--headless=new")
-                
+
             if self.__mute__:
                 WebScraping.options.add_argument("--mute-audio")
-                
+
             # Set chrome folder
             if self.__chrome_folder__:
                 WebScraping.options.add_argument(f"--user-data-dir={self.__chrome_folder__}")
 
             # Set default user agent
             if self.__user_agent__:
-                WebScraping.options.add_argument(
-                    '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36')
+                WebScraping.options.add_argument
+                \
+                '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                \
+                '(KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36'
 
             if self.__download_folder__:
                 prefs = {"download.default_directory": f"{self.__download_folder__}",
-                        "download.prompt_for_download": "false",
-                        'profile.default_content_setting_values.automatic_downloads': 1,
-                        'profile.default_content_settings.popups': 0,
-                        "download.directory_upgrade": True,
-                        "plugins.always_open_pdf_externally": True,
-                        "plugins.plugins_list": [{"enabled": False, "name": "Chrome PDF Viewer"}],
-                        'download.extensions_to_open': 'xml',
-                        'safebrowsing.enabled': True
-                        }
+                         "download.prompt_for_download": "false",
+                         'profile.default_content_setting_values.automatic_downloads': 1,
+                         'profile.default_content_settings.popups': 0,
+                         "download.directory_upgrade": True,
+                         "plugins.always_open_pdf_externally": True,
+                         "plugins.plugins_list": [{"enabled": False, "name": "Chrome PDF Viewer"}],
+                         'download.extensions_to_open': 'xml',
+                         'safebrowsing.enabled': True
+                         }
 
                 WebScraping.options.add_experimental_option("prefs", prefs)
 
@@ -215,15 +220,15 @@ class WebScraping ():
         # seleniumwire_options = {}
         if (self.__proxy_server__ and self.__proxy_port__
                 and self.__proxy_user__ and self.__proxy_pass__):
-            
+
             self.__create_proxy_extesion__()
             WebScraping.options.add_extension(self.__pluginfile__)
 
         # Autoinstall driver with selenium
         if not WebScraping.service:
             WebScraping.service = Service()
-          
-        # Auto download driver  
+
+        # Auto download driver
         self.driver = webdriver.Chrome(
             service=WebScraping.service,
             options=WebScraping.options
@@ -350,7 +355,7 @@ class WebScraping ():
         """
         Send click to specific element in the page
         """
-        if type(selector) == 'str':
+        if isinstance(selector, str):
             elem = self.driver.find_element(By.CSS_SELECTOR, selector)
             elem.click()
         else:
@@ -370,7 +375,7 @@ class WebScraping ():
                     elem = self.driver.find_element(By.CSS_SELECTOR, selector)
                     elem.text
                     break
-                except:
+                except Exception:
 
                     # Wait time or refresh page
                     if refresh_back_tab != -1:
@@ -398,22 +403,47 @@ class WebScraping ():
                     elem.text
                     time.sleep(self.basetime)
                     continue
-                except:
+                except Exception:
                     break
             else:
                 raise Exception(
                     "Time out exeded. The element {} is until in the page".format(selector))
 
-    def get_text(self, selector):
+    def implicit_wait(self, selector, refresh: bool = False):
+        try:
+            WebDriverWait(self.get_browser(), 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, selector))
+            )
+        except Exception:
+            if refresh is False:
+                raise Exception(
+                    "Time out exeded. The element {} is until in the page".format(selector))
+
+            self.get_browser().refresh()
+            time.sleep(3)
+
+    def clear(self, obj):
+        """
+        Returns:
+            Change the None results to empty strings: " "
+        """
+        if obj is None:
+            return ""
+
+        return obj
+
+    def get_text(self, selector, item: str = None):
         """
         Return text for specific element in the page
         """
-
         try:
-            elem = self.driver.find_element(By.CSS_SELECTOR, selector)
+            if item is None:
+                elem = self.driver.find_element(By.CSS_SELECTOR, selector)
+                return elem.text
+
+            elem = selector.find_element(By.CSS_SELECTOR, item)
             return elem.text
-        except Exception as err:
-            # print (err)
+        except Exception:
             return None
 
     def get_texts(self, selector):
@@ -428,7 +458,7 @@ class WebScraping ():
         for elem in elems:
             try:
                 texts.append(elem.text)
-            except:
+            except Exception:
                 continue
 
         return texts
@@ -438,15 +468,19 @@ class WebScraping ():
         self.driver.execute_script(
             f"arguments[0].setAttribute('{attrib_name}', '{attrib_value}');", elem)
 
-    def get_attrib(self, selector, attrib_name):
+    def get_attrib(self, attrib_name, selector, item: str = None):
         """
         Return the class value from specific element in the page
         """
 
         try:
-            elem = self.driver.find_element(By.CSS_SELECTOR, selector)
+            if item is None:
+                elem = self.driver.find_element(By.CSS_SELECTOR, selector)
+                return elem.get_attribute(attrib_name)
+
+            elem = selector.find_element(By.CSS_SELECTOR, item)
             return elem.get_attribute(attrib_name)
-        except:
+        except Exception:
             return None
 
     def get_attribs(self, selector, attrib_name, allow_duplicates=True, allow_empty=True):
@@ -472,25 +506,31 @@ class WebScraping ():
 
                 attributes.append(attribute)
 
-            except:
+            except Exception:
                 continue
 
         return attributes
 
-    def get_elem(self, selector):
+    def get_elem(self, selector, item: str = None):
         """
         Return an specific element in the page
         """
+        if item is None:
+            elem = self.driver.find_element(By.CSS_SELECTOR, selector)
+            return elem
 
-        elem = self.driver.find_element(By.CSS_SELECTOR, selector)
+        elem = selector.find_element(By.CSS_SELECTOR, item)
         return elem
 
-    def get_elems(self, selector):
+    def get_elems(self, selector, item: str = None):
         """
         Return a list of specific element in the page
         """
+        if item is None:
+            elems = self.driver.find_elements(By.CSS_SELECTOR, selector)
+            return elems
 
-        elems = self.driver.find_elements(By.CSS_SELECTOR, selector)
+        elems = selector.find_elements(By.CSS_SELECTOR, item)
         return elems
 
     def set_page_js(self, web_page, new_tab=False):
@@ -525,7 +565,7 @@ class WebScraping ():
 
         # Catch error in load page
         except Exception as err:
-
+            print(err)
             # Raise error
             if break_time_out:
                 raise Exception(f"Time out to load page: {web_page}")
@@ -534,11 +574,11 @@ class WebScraping ():
             else:
                 self.driver.execute_script("window.stop();")
 
-    def click_js(self, selector:str):
+    def click_js(self, selector: str):
         """
         Send click with js, for hiden elements
         """
-        
+
         elem = self.driver.find_element(By.CSS_SELECTOR, selector)
         self.driver.execute_script("arguments[0].click();", elem)
 
@@ -675,20 +715,46 @@ class WebScraping ():
                                    scroll_x,
                                    scroll_y)
 
-    def set_local_storage (self, key:str, value:str):
+    def infinite_scroll(self, selector, button=None):
+        # Get element to scroll
+        elem = self.get_elem(selector)
+
+        # Scroll down the whole page to load all results in the D.O.M
+        if button is None:
+            while True:
+                # Get current position
+                current_position = self.get_browser().execute_script("return arguments[0].scrollTop;", elem)
+
+                # Scroll down
+                self.get_browser().execute_script("arguments[0].scrollTop += {};".format(720), elem)
+
+                # Give some time to load new items
+                time.sleep(5)
+
+                # Get new scroll position
+                new_scroll_position = self.get_browser().execute_script("return arguments[0].scrollTop;", elem)
+
+                # If we can't scroll down any more we have reached the bottom
+                if new_scroll_position == current_position:
+                    break
+
+        # Pending: we should implement a future funcionality when inifinite scroll requires to click a button
+        raise Exception("Unimplemented")
+
+    def set_local_storage(self, key: str, value: str):
         """ Set a value in local storage with js
 
         Args:
             key (str): local storage key
             value (str): local storage value
         """
-        
+
         script = f"window.localStorage.setItem('{key}', '{value}')"
-        self.driver.execute_script (script)
-        
+        self.driver.execute_script(script)
+
     def remove_elems(self, selector: str):
         """ Remove all elements with specific selector
-        
+
         Args
             selector (str): css selector to remove
         """
