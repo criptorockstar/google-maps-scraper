@@ -737,9 +737,9 @@ class WebScraping ():
                 # If we can't scroll down any more we have reached the bottom
                 if new_scroll_position == current_position:
                     break
-
-        # Pending: we should implement a future funcionality when inifinite scroll requires to click a button
-        raise Exception("Unimplemented")
+        else:
+            # Pending: we should implement a future funcionality when inifinite scroll requires to click a button
+            raise Exception("Unimplemented")
 
     def set_local_storage(self, key: str, value: str):
         """ Set a value in local storage with js

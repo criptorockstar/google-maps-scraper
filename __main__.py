@@ -24,9 +24,12 @@ if __name__ == "__main__":
     # Extract data
     data = maps_scraper.extract_business()
 
+    print(data)
+    '''
     for row in data:
         row.append(POSTAL_CODE)
 
     # Save data in google sheetsç
     sheets_manager = SheetsManager(GOOGLE_SHEET, CRED_PATH, "data")
     sheets_manager.write_data(data, 2)
+    '''
